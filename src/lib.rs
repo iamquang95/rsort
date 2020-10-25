@@ -1,25 +1,47 @@
-pub struct Array {
+pub struct ArraySorter {
+    arr: Array,
+    algo: SortAlgo,
+}
+
+impl ArraySorter {
+
+    pub fn new(
+        arr: Vec<u32>,
+        algo: SortAlgo,
+    ) -> ArraySorter {
+        ArraySorter {
+            arr: Array::new(arr),
+            algo,
+        }
+    }
+
+    pub fn sort(&mut self) {
+        self.algo.sort(&mut self.arr)
+    }
+}
+
+struct Array {
     pub arr: Box<Vec<u32>>
 }
 
 impl Array {
 
-    pub fn new(arr: Vec<u32>) -> Array {
+    fn new(arr: Vec<u32>) -> Array {
         Array {
             arr: Box::new(arr)
         }
     }
 
-    pub fn size(&self) -> usize {
+    fn size(&self) -> usize {
         self.arr.len()
     }
 
-    pub fn print(&self) {
+    fn print(&self) {
         std::thread::sleep(std::time::Duration::from_millis(500));
         println!("{:?}", self.arr);
     }
 
-    pub fn swap(&mut self, i: usize, j: usize) {
+    fn swap(&mut self, i: usize, j: usize) {
         assert!(i < self.size() && j < self.size());
         let tmp = self.arr[i];
         self.arr[i] = self.arr[j];
@@ -33,7 +55,7 @@ pub enum SortAlgo {
 }
 
 impl SortAlgo {
-    pub fn sort(&self, arr: &mut Array) {
+    fn sort(&self, arr: &mut Array) {
         for i in 1..arr.size() {
             let mut j = i;
             while j > 0 && arr.arr[j-1] > arr.arr[j] {
