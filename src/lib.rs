@@ -1,6 +1,7 @@
 pub struct ArraySorter {
     arr: Array,
     algo: SortAlgo,
+    tui: TermUI,
     total_swap: u32,
 }
 
@@ -9,6 +10,7 @@ impl ArraySorter {
         ArraySorter {
             arr: Array::new(arr),
             algo,
+            tui: TermUI::new(),
             total_swap: 0,
         }
     }
@@ -21,8 +23,41 @@ impl ArraySorter {
     fn swap(&mut self, i: usize, j: usize) {
         std::thread::sleep(std::time::Duration::from_millis(500));
         self.arr.swap(i, j);
-        self.arr.print();
+        self.print_array();
         self.total_swap += 1;
+    }
+
+    fn print_array(&mut self) {
+        self.tui.write(format!("{}", self.arr))
+    }
+}
+
+use std::fmt::Display;
+use std::io::{Stdin, Stdout, Write};
+
+struct TermUI {
+    stdin: Stdin,
+    stdout: Stdout,
+}
+
+impl TermUI {
+    fn new() -> TermUI {
+        TermUI {
+            stdin: std::io::stdin(),
+            stdout: std::io::stdout(),
+        }
+    }
+
+    fn write(&mut self, str: String) {
+        write!(
+            self.stdout,
+            "{}{}{}{}",
+            termion::clear::All,
+            termion::cursor::Goto(1, 1),
+            str,
+            termion::cursor::Hide
+        ).unwrap();
+        self.stdout.flush().unwrap();
     }
 }
 
@@ -48,6 +83,18 @@ impl Array {
         let tmp = self.arr[i];
         self.arr[i] = self.arr[j];
         self.arr[j] = tmp;
+    }
+}
+
+impl Display for Array {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut result = String::from("");
+        for item in self.arr.iter() {
+            let str = "▇".repeat(*item as usize);
+            result += &str;
+            result += "\r\n"
+        }
+        write!(f, "{}", result)
     }
 }
 
