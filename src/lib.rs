@@ -21,18 +21,15 @@ impl ArraySorter {
     }
 
     fn swap(&mut self, i: usize, j: usize) {
-        std::thread::sleep(std::time::Duration::from_millis(500));
+        self.tui.write(self.arr.print_swap(i, j));
+        std::thread::sleep(std::time::Duration::from_millis(250));
         self.arr.swap(i, j);
-        self.print_array();
+        self.tui.write(self.arr.print_swap(i, j));
+        std::thread::sleep(std::time::Duration::from_millis(250));
         self.total_swap += 1;
-    }
-
-    fn print_array(&mut self) {
-        self.tui.write(format!("{}", self.arr))
     }
 }
 
-use std::fmt::Display;
 use std::io::{Stdin, Stdout, Write};
 
 struct TermUI {
@@ -56,10 +53,13 @@ impl TermUI {
             termion::cursor::Goto(1, 1),
             str,
             termion::cursor::Hide
-        ).unwrap();
+        )
+        .unwrap();
         self.stdout.flush().unwrap();
     }
 }
+
+use ansi_term::Color;
 
 struct Array {
     pub arr: Box<Vec<u32>>,
@@ -74,8 +74,18 @@ impl Array {
         self.arr.len()
     }
 
-    fn print(&self) {
-        println!("{:?}", self.arr);
+    fn print_swap(&self, i: usize, j: usize) -> String{
+        let mut result = String::from("");
+        for (idx, item) in self.arr.iter().enumerate() {
+            let color = if idx == i || idx == j {
+                Color::Yellow
+            } else {
+                Color::White
+            };
+            let s = format!("{} {}\r\n", idx, color.paint("▇".repeat(*item as usize)));
+            result += &s;
+        }
+        result
     }
 
     fn swap(&mut self, i: usize, j: usize) {
@@ -85,19 +95,6 @@ impl Array {
         self.arr[j] = tmp;
     }
 }
-
-impl Display for Array {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut result = String::from("");
-        for item in self.arr.iter() {
-            let str = "▇".repeat(*item as usize);
-            result += &str;
-            result += "\r\n"
-        }
-        write!(f, "{}", result)
-    }
-}
-
 #[derive(Clone)]
 pub enum SortAlgo {
     InserionSort,
