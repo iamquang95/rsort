@@ -97,16 +97,39 @@ impl Array {
 }
 #[derive(Clone)]
 pub enum SortAlgo {
-    InserionSort,
+    InsertionSort,
+    SelectionSort,
 }
 
 impl SortAlgo {
     fn sort(&self, arr: &mut ArraySorter) {
+        match self {
+            SortAlgo::InsertionSort => SortAlgo::insertion_sort(arr),
+            SortAlgo::SelectionSort => SortAlgo::selection_srot(arr),
+        }
+    }
+
+    fn insertion_sort(arr: &mut ArraySorter) {
         for i in 1..arr.arr.size() {
             let mut j = i;
             while j > 0 && arr.arr.arr[j - 1] > arr.arr.arr[j] {
                 arr.swap(j, j - 1);
                 j -= 1;
+            }
+        }
+    }
+
+    fn selection_srot(arr: &mut ArraySorter) {
+        let arr_size = arr.arr.size();
+        for i in 0..arr_size {
+            let mut save_j = i;
+            for j in i+1..arr_size {
+                if arr.arr.arr[j] < arr.arr.arr[save_j] {
+                    save_j = j
+                }
+            }
+            if i != save_j {
+                arr.swap(i, save_j)
             }
         }
     }
