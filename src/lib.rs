@@ -74,7 +74,7 @@ impl Array {
         self.arr.len()
     }
 
-    fn print_swap(&self, i: usize, j: usize) -> String{
+    fn print_swap(&self, i: usize, j: usize) -> String {
         let mut result = String::from("");
         for (idx, item) in self.arr.iter().enumerate() {
             let color = if idx == i || idx == j {
@@ -99,6 +99,7 @@ impl Array {
 pub enum SortAlgo {
     InsertionSort,
     SelectionSort,
+    BubbleSort,
 }
 
 impl SortAlgo {
@@ -106,6 +107,7 @@ impl SortAlgo {
         match self {
             SortAlgo::InsertionSort => SortAlgo::insertion_sort(arr),
             SortAlgo::SelectionSort => SortAlgo::selection_srot(arr),
+            SortAlgo::BubbleSort => SortAlgo::bubble_sort(arr),
         }
     }
 
@@ -123,13 +125,29 @@ impl SortAlgo {
         let arr_size = arr.arr.size();
         for i in 0..arr_size {
             let mut save_j = i;
-            for j in i+1..arr_size {
+            for j in i + 1..arr_size {
                 if arr.arr.arr[j] < arr.arr.arr[save_j] {
                     save_j = j
                 }
             }
             if i != save_j {
                 arr.swap(i, save_j)
+            }
+        }
+    }
+    
+    fn bubble_sort(arr: &mut ArraySorter) {
+        let arr_size = arr.arr.size();
+        loop {
+            let mut swapped = false;
+            for i in 1..arr_size {
+                if arr.arr.arr[i - 1] > arr.arr.arr[i] {
+                    arr.swap(i, i - 1);
+                    swapped = true;
+                }
+            }
+            if !swapped {
+                break;
             }
         }
     }
