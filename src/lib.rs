@@ -100,6 +100,7 @@ pub enum SortAlgo {
     InsertionSort,
     SelectionSort,
     BubbleSort,
+    GnomeSort,
 }
 
 impl SortAlgo {
@@ -108,6 +109,7 @@ impl SortAlgo {
             SortAlgo::InsertionSort => SortAlgo::insertion_sort(arr),
             SortAlgo::SelectionSort => SortAlgo::selection_srot(arr),
             SortAlgo::BubbleSort => SortAlgo::bubble_sort(arr),
+            SortAlgo::GnomeSort => SortAlgo::gnome_sort(arr),
         }
     }
 
@@ -135,7 +137,7 @@ impl SortAlgo {
             }
         }
     }
-    
+
     fn bubble_sort(arr: &mut ArraySorter) {
         let arr_size = arr.arr.size();
         loop {
@@ -148,6 +150,19 @@ impl SortAlgo {
             }
             if !swapped {
                 break;
+            }
+        }
+    }
+
+    fn gnome_sort(arr: &mut ArraySorter) {
+        let arr_size = arr.arr.size();
+        let mut i = 0;
+        while i < arr_size {
+            if i == 0 || arr.arr.arr[i] >= arr.arr.arr[i-1] {
+                i += 1
+            } else {
+                arr.swap(i, i-1);
+                i -= 1;
             }
         }
     }
