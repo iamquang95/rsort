@@ -35,6 +35,14 @@ impl ArraySorter {
         self.total_swap += 1;
     }
 
+    fn set(&mut self, i: usize, val: u32) {
+        assert!(i < self.size());
+        self.arr[i] = val;
+        self.tui.write(self.print_set(i));
+        std::thread::sleep(std::time::Duration::from_millis(250));
+        self.total_swap += 1;
+    }
+
     fn size(&self) -> usize {
         self.arr.len()
     }
@@ -43,6 +51,20 @@ impl ArraySorter {
         let mut result = String::from("");
         for (idx, item) in self.arr.iter().enumerate() {
             let color = if idx == i || idx == j {
+                Color::Yellow
+            } else {
+                Color::White
+            };
+            let s = format!("{} {}\r\n", idx, color.paint("▇".repeat(*item as usize)));
+            result += &s;
+        }
+        result
+    }
+
+    fn print_set(&self, i: usize) -> String {
+        let mut result = String::from("");
+        for (idx, item) in self.arr.iter().enumerate() {
+            let color = if idx == i {
                 Color::Yellow
             } else {
                 Color::White
@@ -88,6 +110,7 @@ pub enum SortAlgo {
     BubbleSort,
     GnomeSort,
     CombSort,
+    MergeSort,
 }
 
 impl SortAlgo {
@@ -98,6 +121,7 @@ impl SortAlgo {
             SortAlgo::BubbleSort => SortAlgo::bubble_sort(arr),
             SortAlgo::GnomeSort => SortAlgo::gnome_sort(arr),
             SortAlgo::CombSort => SortAlgo::comb_sort(arr),
+            SortAlgo::MergeSort => SortAlgo::merge_sort(arr),
         }
     }
 
@@ -176,5 +200,41 @@ impl SortAlgo {
                 i += 1
             }
         }
+    }
+
+    fn merge_sort(arr_sorter: &mut ArraySorter) {
+        fn merge_sort(arr_sorter: &mut ArraySorter, left: usize, right: usize) {
+            if left < right {
+                let mid = left + (right - left) / 2;
+                merge_sort(arr_sorter, left, mid);
+                merge_sort(arr_sorter, mid + 1, right);
+                merge(arr_sorter, left, mid, right);
+            }
+        };
+
+        fn merge(arr_sorter: &mut ArraySorter, left: usize, mid: usize, right: usize) {
+            let left_arr = arr_sorter.arr[left..=mid].to_vec();
+            let mut left_iter = left_arr.iter().peekable();
+            let right_arr = arr_sorter.arr[mid + 1..=right].to_vec();
+            let mut right_iter = right_arr.iter().peekable();
+
+            for i in left..=right {
+                match (left_iter.peek(), right_iter.peek()) {
+                    (None, None) => break,
+                    (None, Some(_)) => arr_sorter.set(i, *right_iter.next().unwrap()),
+                    (Some(_), None) => arr_sorter.set(i, *left_iter.next().unwrap()),
+                    (Some(left_val), Some(right_val)) => {
+                        if **left_val < **right_val {
+                            arr_sorter.set(i, *left_iter.next().unwrap())
+                        } else {
+                            arr_sorter.set(i, *right_iter.next().unwrap())
+                        }
+                    }
+                }
+            }
+        };
+
+        let arr_size = arr_sorter.size();
+        merge_sort(arr_sorter, 0, arr_size - 1);
     }
 }
