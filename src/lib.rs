@@ -1,5 +1,7 @@
+use ansi_term::Color;
+
 pub struct ArraySorter {
-    arr: Array,
+    arr: Vec<u32>,
     algo: SortAlgo,
     tui: TermUI,
     total_swap: u32,
@@ -8,7 +10,7 @@ pub struct ArraySorter {
 impl ArraySorter {
     pub fn new(arr: Vec<u32>, algo: SortAlgo) -> ArraySorter {
         ArraySorter {
-            arr: Array::new(arr),
+            arr,
             algo,
             tui: TermUI::new(),
             total_swap: 0,
@@ -21,53 +23,16 @@ impl ArraySorter {
     }
 
     fn swap(&mut self, i: usize, j: usize) {
-        self.tui.write(self.arr.print_swap(i, j));
+        assert!(i < self.size() && j < self.size());
+
+        self.tui.write(self.print_swap(i, j));
         std::thread::sleep(std::time::Duration::from_millis(250));
+
         self.arr.swap(i, j);
-        self.tui.write(self.arr.print_swap(i, j));
+
+        self.tui.write(self.print_swap(i, j));
         std::thread::sleep(std::time::Duration::from_millis(250));
         self.total_swap += 1;
-    }
-}
-
-use std::io::{Stdin, Stdout, Write};
-
-struct TermUI {
-    stdin: Stdin,
-    stdout: Stdout,
-}
-
-impl TermUI {
-    fn new() -> TermUI {
-        TermUI {
-            stdin: std::io::stdin(),
-            stdout: std::io::stdout(),
-        }
-    }
-
-    fn write(&mut self, str: String) {
-        write!(
-            self.stdout,
-            "{}{}{}{}",
-            termion::clear::All,
-            termion::cursor::Goto(1, 1),
-            str,
-            termion::cursor::Hide
-        )
-        .unwrap();
-        self.stdout.flush().unwrap();
-    }
-}
-
-use ansi_term::Color;
-
-struct Array {
-    pub arr: Box<Vec<u32>>,
-}
-
-impl Array {
-    fn new(arr: Vec<u32>) -> Array {
-        Array { arr: Box::new(arr) }
     }
 
     fn size(&self) -> usize {
@@ -87,14 +52,35 @@ impl Array {
         }
         result
     }
+}
 
-    fn swap(&mut self, i: usize, j: usize) {
-        assert!(i < self.size() && j < self.size());
-        let tmp = self.arr[i];
-        self.arr[i] = self.arr[j];
-        self.arr[j] = tmp;
+use std::io::{Stdout, Write};
+
+struct TermUI {
+    stdout: Stdout,
+}
+
+impl TermUI {
+    fn new() -> TermUI {
+        TermUI {
+            stdout: std::io::stdout(),
+        }
+    }
+
+    fn write(&mut self, str: String) {
+        write!(
+            self.stdout,
+            "{}{}{}{}",
+            termion::clear::All,
+            termion::cursor::Goto(1, 1),
+            str,
+            termion::cursor::Hide
+        )
+        .unwrap();
+        self.stdout.flush().unwrap();
     }
 }
+
 #[derive(Clone)]
 pub enum SortAlgo {
     InsertionSort,
@@ -115,38 +101,38 @@ impl SortAlgo {
         }
     }
 
-    fn insertion_sort(arr: &mut ArraySorter) {
-        for i in 1..arr.arr.size() {
+    fn insertion_sort(arr_sorter: &mut ArraySorter) {
+        for i in 1..arr_sorter.size() {
             let mut j = i;
-            while j > 0 && arr.arr.arr[j - 1] > arr.arr.arr[j] {
-                arr.swap(j, j - 1);
+            while j > 0 && arr_sorter.arr[j - 1] > arr_sorter.arr[j] {
+                arr_sorter.swap(j, j - 1);
                 j -= 1;
             }
         }
     }
 
-    fn selection_srot(arr: &mut ArraySorter) {
-        let arr_size = arr.arr.size();
+    fn selection_srot(arr_sorter: &mut ArraySorter) {
+        let arr_size = arr_sorter.size();
         for i in 0..arr_size {
             let mut save_j = i;
             for j in i + 1..arr_size {
-                if arr.arr.arr[j] < arr.arr.arr[save_j] {
+                if arr_sorter.arr[j] < arr_sorter.arr[save_j] {
                     save_j = j
                 }
             }
             if i != save_j {
-                arr.swap(i, save_j)
+                arr_sorter.swap(i, save_j)
             }
         }
     }
 
-    fn bubble_sort(arr: &mut ArraySorter) {
-        let arr_size = arr.arr.size();
+    fn bubble_sort(arr_sorter: &mut ArraySorter) {
+        let arr_size = arr_sorter.size();
         loop {
             let mut sorted = true;
             for i in 1..arr_size {
-                if arr.arr.arr[i - 1] > arr.arr.arr[i] {
-                    arr.swap(i, i - 1);
+                if arr_sorter.arr[i - 1] > arr_sorter.arr[i] {
+                    arr_sorter.swap(i, i - 1);
                     sorted = false;
                 }
             }
@@ -156,39 +142,39 @@ impl SortAlgo {
         }
     }
 
-    fn gnome_sort(arr: &mut ArraySorter) {
-        let arr_size = arr.arr.size();
+    fn gnome_sort(arr_sorter: &mut ArraySorter) {
+        let arr_size = arr_sorter.size();
         let mut i = 0;
         while i < arr_size {
-            if i == 0 || arr.arr.arr[i] >= arr.arr.arr[i-1] {
+            if i == 0 || arr_sorter.arr[i] >= arr_sorter.arr[i - 1] {
                 i += 1
             } else {
-                arr.swap(i, i-1);
+                arr_sorter.swap(i, i - 1);
                 i -= 1;
             }
         }
     }
 
-    fn comb_sort(arr: &mut ArraySorter) {
-        let arr_size = arr.arr.size();
+    fn comb_sort(arr_sorter: &mut ArraySorter) {
+        let arr_size = arr_sorter.size();
         let mut gap = arr_size;
         let mut sorted = false;
-        let mut shrink = 1.3;
+        let shrink = 1.3;
 
         while !sorted {
             gap = ((gap as f64) / shrink) as usize;
-            if  gap <= 1 {
+            if gap <= 1 {
                 gap = 1;
                 sorted = true
             }
             let mut i = 0;
             while i + gap < arr_size {
-                if arr.arr.arr[i] > arr.arr.arr[i+gap] {
-                    arr.swap(i, i+gap);
+                if arr_sorter.arr[i] > arr_sorter.arr[i + gap] {
+                    arr_sorter.swap(i, i + gap);
                     sorted = false;
                 }
                 i += 1
             }
-        } 
+        }
     }
 }
