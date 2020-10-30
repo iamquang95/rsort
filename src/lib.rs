@@ -111,6 +111,7 @@ pub enum SortAlgo {
     GnomeSort,
     CombSort,
     MergeSort,
+    QuickSort,
 }
 
 impl SortAlgo {
@@ -122,6 +123,7 @@ impl SortAlgo {
             SortAlgo::GnomeSort => SortAlgo::gnome_sort(arr),
             SortAlgo::CombSort => SortAlgo::comb_sort(arr),
             SortAlgo::MergeSort => SortAlgo::merge_sort(arr),
+            SortAlgo::QuickSort => SortAlgo::quick_sort(arr),
         }
     }
 
@@ -236,5 +238,32 @@ impl SortAlgo {
 
         let arr_size = arr_sorter.size();
         merge_sort(arr_sorter, 0, arr_size - 1);
+    }
+
+    fn quick_sort(arr_sorter: &mut ArraySorter) {
+        fn quick_sort(arr_sorter: &mut ArraySorter, left: usize, right: usize) {
+            if left < right {
+                let p = partition(arr_sorter, left, right);
+                if p > 0 {
+                    quick_sort(arr_sorter, left, p - 1);
+                }
+                quick_sort(arr_sorter, p + 1, right);
+            }
+        }
+
+        fn partition(arr_sorter: &mut ArraySorter, left: usize, right: usize) -> usize {
+            let pivot = arr_sorter.arr[right];
+            let mut i = left;
+            for j in left..=right {
+                if arr_sorter.arr[j] < pivot {
+                    arr_sorter.swap(i, j);
+                    i += 1;
+                }
+            }
+            arr_sorter.swap(i, right);
+            i
+        }
+        let arr_size = arr_sorter.size();
+        quick_sort(arr_sorter, 0, arr_size - 1); 
     }
 }
