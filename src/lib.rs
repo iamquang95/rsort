@@ -5,6 +5,7 @@ pub struct ArraySorter {
     algo: SortAlgo,
     tui: TermUI,
     total_swap: u32,
+    highlight_range: Option<(usize, usize)>,
 }
 
 impl ArraySorter {
@@ -14,12 +15,17 @@ impl ArraySorter {
             algo,
             tui: TermUI::new(),
             total_swap: 0,
+            highlight_range: None,
         }
     }
 
     pub fn sort(&mut self) {
         let algo = self.algo.clone();
-        algo.sort(self)
+        
+        self.tui.write(self.print_arr());
+        std::thread::sleep(std::time::Duration::from_millis(250));
+        algo.sort(self);
+        self.tui.write(self.print_arr());
     }
 
     fn swap(&mut self, i: usize, j: usize) {
@@ -55,7 +61,13 @@ impl ArraySorter {
             } else {
                 Color::White
             };
-            let s = format!("{} {}\r\n", idx, color.paint("▇".repeat(*item as usize)));
+            let range_prefix = self.get_range_prefix(idx);
+            let s = format!(
+                "{}{} {}\r\n",
+                range_prefix,
+                idx,
+                color.paint("▇".repeat(*item as usize))
+            );
             result += &s;
         }
         result
@@ -69,10 +81,47 @@ impl ArraySorter {
             } else {
                 Color::White
             };
-            let s = format!("{} {}\r\n", idx, color.paint("▇".repeat(*item as usize)));
+            let range_prefix = self.get_range_prefix(idx);
+            let s = format!("{}{} {}\r\n", range_prefix, idx, color.paint("▇".repeat(*item as usize)));
             result += &s;
         }
         result
+    }
+
+    fn print_arr(&self) -> String {
+        let mut result = String::from("");
+        for (idx, item) in self.arr.iter().enumerate() {
+            let color = Color::White;
+            let range_prefix = " ";
+            let s = format!("{}{} {}\r\n", range_prefix, idx, color.paint("▇".repeat(*item as usize)));
+            result += &s;
+        }
+        result 
+    }
+
+    fn get_range_prefix(&self, idx: usize) -> String {
+        String::from(match self.highlight_range {
+            None => " ",
+            Some((left, right)) => {
+                if idx == left {
+                    "┌"
+                } else if idx == right {
+                    "└"
+                } else if left < idx && idx < right {
+                    "│"
+                } else {
+                    " "
+                }
+            }
+        })
+    }
+
+    fn set_highlight_range(&mut self, left: usize, right: usize) {
+        self.highlight_range = Some((left, right));
+    }
+
+    fn clear_highlight_range(&mut self) {
+        self.highlight_range = None;
     }
 }
 
@@ -130,10 +179,12 @@ impl SortAlgo {
     fn insertion_sort(arr_sorter: &mut ArraySorter) {
         for i in 1..arr_sorter.size() {
             let mut j = i;
+            arr_sorter.set_highlight_range(0, i);
             while j > 0 && arr_sorter.arr[j - 1] > arr_sorter.arr[j] {
                 arr_sorter.swap(j, j - 1);
                 j -= 1;
             }
+            arr_sorter.clear_highlight_range();
         }
     }
 
@@ -220,6 +271,7 @@ impl SortAlgo {
             let right_arr = arr_sorter.arr[mid + 1..=right].to_vec();
             let mut right_iter = right_arr.iter().peekable();
 
+            arr_sorter.set_highlight_range(left, right);
             for i in left..=right {
                 match (left_iter.peek(), right_iter.peek()) {
                     (None, None) => break,
@@ -234,6 +286,7 @@ impl SortAlgo {
                     }
                 }
             }
+            arr_sorter.clear_highlight_range();
         };
 
         let arr_size = arr_sorter.size();
@@ -254,6 +307,7 @@ impl SortAlgo {
         fn partition(arr_sorter: &mut ArraySorter, left: usize, right: usize) -> usize {
             let pivot = arr_sorter.arr[right];
             let mut i = left;
+            arr_sorter.set_highlight_range(left, right);
             for j in left..=right {
                 if arr_sorter.arr[j] < pivot {
                     arr_sorter.swap(i, j);
@@ -261,9 +315,11 @@ impl SortAlgo {
                 }
             }
             arr_sorter.swap(i, right);
+            arr_sorter.clear_highlight_range();
             i
         }
+
         let arr_size = arr_sorter.size();
-        quick_sort(arr_sorter, 0, arr_size - 1); 
+        quick_sort(arr_sorter, 0, arr_size - 1);
     }
 }
