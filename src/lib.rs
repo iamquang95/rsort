@@ -164,6 +164,7 @@ pub enum SortAlgo {
 }
 
 impl SortAlgo {
+
     fn sort(&self, arr: &mut ArraySorter) {
         match self {
             SortAlgo::InsertionSort => SortAlgo::insertion_sort(arr),
@@ -322,4 +323,40 @@ impl SortAlgo {
         let arr_size = arr_sorter.size();
         quick_sort(arr_sorter, 0, arr_size - 1);
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{ArraySorter, SortAlgo};
+
+    #[macro_export]
+    macro_rules! algo_test {
+        ($algo_name:ident, $algo:expr) => {
+            #[test]
+            fn $algo_name() {
+                let v: Vec<u32> = vec![5, 8, 2, 7, 1, 4, 3, 6];
+                let algo = $algo;
+                let mut solver = ArraySorter::new(v.clone(), algo);
+                solver.sort();    
+                assert!(is_sorted(&solver));
+            }
+        };
+    }
+
+    fn is_sorted(arr_sorter: &ArraySorter) -> bool {
+        for i in 1..arr_sorter.size() {
+            if arr_sorter.arr[i] < arr_sorter.arr[i-1] {
+                return false;
+            }
+        }
+        true
+    }
+
+    algo_test!(insertion_sort_should_work, SortAlgo::InsertionSort);
+    algo_test!(selection_sort_should_work, SortAlgo::SelectionSort);
+    algo_test!(bubble_sort_should_work, SortAlgo::BubbleSort);
+    algo_test!(gnome_sort_should_work, SortAlgo::GnomeSort);
+    algo_test!(comb_sort_should_work, SortAlgo::CombSort);
+    algo_test!(merge_sort_should_work, SortAlgo::MergeSort);
+    algo_test!(quick_sort_should_work, SortAlgo::QuickSort);
 }
