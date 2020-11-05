@@ -1,56 +1,75 @@
+pub mod app_config;
+mod tui;
+
 use ansi_term::Color;
 
 pub struct ArraySorter {
     arr: Vec<u32>,
     algo: SortAlgo,
-    tui: TermUI,
+    tui: tui::TermUI,
     total_swap: u32,
     highlight_range: Option<(usize, usize)>,
+    config: app_config::Config,
 }
 
 impl ArraySorter {
-    pub fn new(arr: Vec<u32>, algo: SortAlgo) -> ArraySorter {
+    pub fn new(arr: Vec<u32>, algo: SortAlgo, config: app_config::Config) -> ArraySorter {
         ArraySorter {
             arr,
             algo,
-            tui: TermUI::new(),
+            tui: tui::TermUI::new(),
             total_swap: 0,
             highlight_range: None,
+            config,
         }
     }
 
     pub fn sort(&mut self) {
         let algo = self.algo.clone();
-        
-        self.tui.write(self.print_arr());
-        std::thread::sleep(std::time::Duration::from_millis(250));
+
+        if !self.config.silent {
+            self.tui.write(self.print_arr());
+            self.thread_sleep();
+        }
         algo.sort(self);
-        self.tui.write(self.print_arr());
+
+        if !self.config.silent {
+            self.tui.write(self.print_arr());
+        }
     }
 
     fn swap(&mut self, i: usize, j: usize) {
         assert!(i < self.size() && j < self.size());
-
-        self.tui.write(self.print_swap(i, j));
-        std::thread::sleep(std::time::Duration::from_millis(250));
+        if !self.config.silent {
+            self.tui.write(self.print_swap(i, j));
+            self.thread_sleep();
+        }
 
         self.arr.swap(i, j);
 
-        self.tui.write(self.print_swap(i, j));
-        std::thread::sleep(std::time::Duration::from_millis(250));
+        if !self.config.silent {
+            self.tui.write(self.print_swap(i, j));
+            self.thread_sleep();
+        }
         self.total_swap += 1;
     }
 
     fn set(&mut self, i: usize, val: u32) {
         assert!(i < self.size());
         self.arr[i] = val;
-        self.tui.write(self.print_set(i));
-        std::thread::sleep(std::time::Duration::from_millis(250));
+        if !self.config.silent {
+            self.tui.write(self.print_set(i));
+            self.thread_sleep();
+        }
         self.total_swap += 1;
     }
 
     fn size(&self) -> usize {
         self.arr.len()
+    }
+
+    fn thread_sleep(&self) {
+        std::thread::sleep(std::time::Duration::from_millis(self.config.delay as u64));
     }
 
     fn print_swap(&self, i: usize, j: usize) -> String {
@@ -82,7 +101,12 @@ impl ArraySorter {
                 Color::White
             };
             let range_prefix = self.get_range_prefix(idx);
-            let s = format!("{}{} {}\r\n", range_prefix, idx, color.paint("▇".repeat(*item as usize)));
+            let s = format!(
+                "{}{} {}\r\n",
+                range_prefix,
+                idx,
+                color.paint("▇".repeat(*item as usize))
+            );
             result += &s;
         }
         result
@@ -93,10 +117,15 @@ impl ArraySorter {
         for (idx, item) in self.arr.iter().enumerate() {
             let color = Color::White;
             let range_prefix = " ";
-            let s = format!("{}{} {}\r\n", range_prefix, idx, color.paint("▇".repeat(*item as usize)));
+            let s = format!(
+                "{}{} {}\r\n",
+                range_prefix,
+                idx,
+                color.paint("▇".repeat(*item as usize))
+            );
             result += &s;
         }
-        result 
+        result
     }
 
     fn get_range_prefix(&self, idx: usize) -> String {
@@ -125,33 +154,6 @@ impl ArraySorter {
     }
 }
 
-use std::io::{Stdout, Write};
-
-struct TermUI {
-    stdout: Stdout,
-}
-
-impl TermUI {
-    fn new() -> TermUI {
-        TermUI {
-            stdout: std::io::stdout(),
-        }
-    }
-
-    fn write(&mut self, str: String) {
-        write!(
-            self.stdout,
-            "{}{}{}{}",
-            termion::clear::All,
-            termion::cursor::Goto(1, 1),
-            str,
-            termion::cursor::Hide
-        )
-        .unwrap();
-        self.stdout.flush().unwrap();
-    }
-}
-
 #[derive(Clone)]
 pub enum SortAlgo {
     InsertionSort,
@@ -164,7 +166,6 @@ pub enum SortAlgo {
 }
 
 impl SortAlgo {
-
     fn sort(&self, arr: &mut ArraySorter) {
         match self {
             SortAlgo::InsertionSort => SortAlgo::insertion_sort(arr),
@@ -336,8 +337,9 @@ mod tests {
             fn $algo_name() {
                 let v: Vec<u32> = vec![5, 8, 2, 7, 1, 4, 3, 6];
                 let algo = $algo;
-                let mut solver = ArraySorter::new(v.clone(), algo);
-                solver.sort();    
+                let mut solver =
+                    ArraySorter::new(v.clone(), algo, crate::app_config::Config::new(true, 0));
+                solver.sort();
                 assert!(is_sorted(&solver));
             }
         };
@@ -345,7 +347,7 @@ mod tests {
 
     fn is_sorted(arr_sorter: &ArraySorter) -> bool {
         for i in 1..arr_sorter.size() {
-            if arr_sorter.arr[i] < arr_sorter.arr[i-1] {
+            if arr_sorter.arr[i] < arr_sorter.arr[i - 1] {
                 return false;
             }
         }
