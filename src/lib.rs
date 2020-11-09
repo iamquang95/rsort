@@ -2,6 +2,8 @@ pub mod app_config;
 mod tui;
 
 use ansi_term::Color;
+use std::error::Error;
+use std::str::FromStr;
 
 pub struct ArraySorter {
     arr: Vec<u32>,
@@ -154,7 +156,18 @@ impl ArraySorter {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParseAlgoError {}
+
+impl std::fmt::Display for ParseAlgoError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        "provided string is not a valid sorting algorithm. Use help command to see the list of supporting algos".fmt(f)
+    }
+}
+
+impl Error for ParseAlgoError {}
+
+#[derive(Clone, Debug)]
 pub enum SortAlgo {
     InsertionSort,
     SelectionSort,
@@ -165,7 +178,55 @@ pub enum SortAlgo {
     QuickSort,
 }
 
+impl FromStr for SortAlgo {
+    type Err = ParseAlgoError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let lower_str = s.to_lowercase();
+        let all_algos = SortAlgo::all_algos();
+        for algo in all_algos {
+            if algo.get_algo_name() == lower_str {
+                return Ok(algo);
+            }
+        }
+        Err(ParseAlgoError {})
+    }
+}
+
 impl SortAlgo {
+    pub fn all_algos() -> Vec<SortAlgo> {
+        vec![
+            SortAlgo::InsertionSort,
+            SortAlgo::SelectionSort,
+            SortAlgo::BubbleSort,
+            SortAlgo::GnomeSort,
+            SortAlgo::CombSort,
+            SortAlgo::MergeSort,
+            SortAlgo::QuickSort,
+        ]
+    }
+
+    pub fn all_algos_str() -> [&'static str; 7] {
+        let mut res: [&str; 7] = [""; 7];
+        let all_algos = SortAlgo::all_algos();
+        for (place, element) in res.iter_mut().zip(all_algos.iter()) {
+            *place = element.get_algo_name();
+        }
+        res
+    }
+
+    pub fn get_algo_name(&self) -> &'static str {
+        match self {
+            SortAlgo::InsertionSort => "insertion",
+            SortAlgo::SelectionSort => "selection",
+            SortAlgo::BubbleSort => "bubble",
+            SortAlgo::GnomeSort => "gnome",
+            SortAlgo::CombSort => "comb",
+            SortAlgo::MergeSort => "merge",
+            SortAlgo::QuickSort => "quick",
+        }
+    }
+
     fn sort(&self, arr: &mut ArraySorter) {
         match self {
             SortAlgo::InsertionSort => SortAlgo::insertion_sort(arr),

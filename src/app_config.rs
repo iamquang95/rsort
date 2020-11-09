@@ -10,6 +10,4 @@ impl Config {
             delay,
         }
     }
-
-
 }
