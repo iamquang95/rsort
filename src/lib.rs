@@ -1,4 +1,5 @@
 pub mod app_config;
+pub mod data_generator;
 mod tui;
 
 use ansi_term::Color;
@@ -15,7 +16,13 @@ pub struct ArraySorter {
 }
 
 impl ArraySorter {
-    pub fn new(arr: Vec<u32>, algo: SortAlgo, config: app_config::Config) -> ArraySorter {
+    pub fn new(
+        algo: SortAlgo,
+        config: app_config::Config,
+        data_generator_config: data_generator::DataGeneratorConfig,
+    ) -> ArraySorter {
+        let generator = data_generator::DataGenerator::new(data_generator_config);
+        let arr = generator.generate_vec();
         ArraySorter {
             arr,
             algo,
