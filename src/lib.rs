@@ -91,7 +91,7 @@ impl ArraySorter {
             };
             let range_prefix = self.get_range_prefix(idx);
             let s = format!(
-                "{}{} {}\r\n",
+                "{}{:2} {}\r\n",
                 range_prefix,
                 idx,
                 color.paint("▇".repeat(*item as usize))
@@ -111,7 +111,7 @@ impl ArraySorter {
             };
             let range_prefix = self.get_range_prefix(idx);
             let s = format!(
-                "{}{} {}\r\n",
+                "{}{:2} {}\r\n",
                 range_prefix,
                 idx,
                 color.paint("▇".repeat(*item as usize))
@@ -127,7 +127,7 @@ impl ArraySorter {
             let color = Color::White;
             let range_prefix = " ";
             let s = format!(
-                "{}{} {}\r\n",
+                "{}{:2} {}\r\n",
                 range_prefix,
                 idx,
                 color.paint("▇".repeat(*item as usize))

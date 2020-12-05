@@ -4,6 +4,9 @@ use std::str::FromStr;
 
 fn main() {
     let matcher = App::new("Sorting algorithms visualization")
+        .usage(
+            "rsort [OPTION]"
+        )
         .arg(
             Arg::with_name("algo")
                 .long("algo")
