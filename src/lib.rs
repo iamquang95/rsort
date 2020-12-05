@@ -397,6 +397,7 @@ impl SortAlgo {
 #[cfg(test)]
 mod tests {
     use crate::{ArraySorter, SortAlgo};
+    use crate::{app_config, data_generator};
 
     #[macro_export]
     macro_rules! algo_test {
@@ -405,8 +406,11 @@ mod tests {
             fn $algo_name() {
                 let v: Vec<u32> = vec![5, 8, 2, 7, 1, 4, 3, 6];
                 let algo = $algo;
-                let mut solver =
-                    ArraySorter::new(v.clone(), algo, crate::app_config::Config::new(true, 0));
+                let mut solver = ArraySorter::new(
+                    algo,
+                    app_config::Config::new(true, 0),
+                    data_generator::DataGeneratorConfig::new_with_seed_arr(v.clone()),
+                );
                 solver.sort();
                 assert!(is_sorted(&solver));
             }
